@@ -67,32 +67,36 @@ export default function TimeBoxer() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg">
-        {phase === "setup" && <SetupPhase onStart={handleStart} />}
-        {phase === "running" && (
-          <TimerPhase
-            task={task}
-            secondsLeft={timer.secondsLeft}
-            totalSeconds={timer.totalSeconds}
-            progress={timer.progress}
-            isPaused={timer.isPaused}
-            onPause={timer.pause}
-            onResume={timer.resume}
-            onCancel={handleCancel}
-          />
-        )}
-        {phase === "review" && (
-          <ReviewPhase
-            task={task}
-            durationMinutes={durationMinutes}
-            onComplete={handleReviewComplete}
-          />
-        )}
-      </div>
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 py-16 bg-[#fafafa]">
+      <div className="w-full max-w-2xl flex flex-col items-center">
+        <div className="w-full animate-in fade-in duration-500">
+          {phase === "setup" && <SetupPhase onStart={handleStart} />}
+          {phase === "running" && (
+            <TimerPhase
+              task={task}
+              secondsLeft={timer.secondsLeft}
+              totalSeconds={timer.totalSeconds}
+              progress={timer.progress}
+              isPaused={timer.isPaused}
+              onPause={timer.pause}
+              onResume={timer.resume}
+              onCancel={handleCancel}
+            />
+          )}
+          {phase === "review" && (
+            <ReviewPhase
+              task={task}
+              durationMinutes={durationMinutes}
+              onComplete={handleReviewComplete}
+            />
+          )}
+        </div>
 
-      <div className="mt-12 w-full max-w-lg">
-        <HistoryPanel sessions={sessions} onClear={clearHistory} />
+        {phase === "setup" && sessions.length > 0 && (
+          <div className="w-full animate-in fade-in duration-700 delay-150 fill-mode-both">
+            <HistoryPanel sessions={sessions} onClear={clearHistory} />
+          </div>
+        )}
       </div>
     </div>
   );
