@@ -3,17 +3,19 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { AlarmClock } from "lucide-react";
+import { AlarmClock, CheckCircle } from "lucide-react";
 
 interface ReviewPhaseProps {
   task: string;
   durationMinutes: number;
+  finishedEarly?: boolean;
   onComplete: (accomplished: boolean, note?: string) => void;
 }
 
 export default function ReviewPhase({
   task,
   durationMinutes,
+  finishedEarly = false,
   onComplete,
 }: ReviewPhaseProps) {
   const [note, setNote] = useState("");
@@ -35,26 +37,34 @@ export default function ReviewPhase({
   };
 
   return (
-    <div className="flex flex-col items-center gap-10">
+    <div className="flex flex-col items-center gap-8">
       <div className="text-center flex flex-col items-center">
-        <AlarmClock className="mb-4 h-10 w-10 text-zinc-300" strokeWidth={1.5} />
-        <h2 className="text-4xl font-bold text-zinc-900 tracking-tight">
-          Time&apos;s up!
+        {finishedEarly ? (
+          <CheckCircle className="mb-3 h-9 w-9 text-emerald-400" strokeWidth={1.5} />
+        ) : (
+          <AlarmClock className="mb-3 h-9 w-9 text-zinc-300" strokeWidth={1.5} />
+        )}
+        <h2 className="text-3xl font-bold text-zinc-900 tracking-tight">
+          {finishedEarly ? "Nice work!" : "Time\u2019s up!"}
         </h2>
-        <p className="mt-3 text-lg text-zinc-400">
-          {durationMinutes} min — {task}
+        <p className="mt-2 text-sm text-zinc-400">
+          {durationMinutes} min session
         </p>
       </div>
 
+      <p className="max-w-md text-center text-2xl font-semibold text-zinc-700">
+        {task}
+      </p>
+
       <div className="text-center w-full max-w-md">
-        <p className="mb-5 text-base font-medium text-zinc-600">
-          Did you accomplish what you set out to do?
+        <p className="mb-4 text-base font-medium text-zinc-600">
+          Did you accomplish your goal?
         </p>
         <div className="flex justify-center gap-4">
           <Button
             variant="outline"
             onClick={() => handleSelect(true)}
-            className={`rounded-full px-10 py-3 text-sm font-medium transition-all duration-200 ${
+            className={`rounded-full px-8 py-3 text-sm font-medium transition-all duration-200 ${
               selected === true
                 ? "bg-zinc-900 text-white border-transparent hover:bg-zinc-800 hover:text-white"
                 : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-800"
@@ -65,7 +75,7 @@ export default function ReviewPhase({
           <Button
             variant="outline"
             onClick={() => handleSelect(false)}
-            className={`rounded-full px-10 py-3 text-sm font-medium transition-all duration-200 ${
+            className={`rounded-full px-8 py-3 text-sm font-medium transition-all duration-200 ${
               selected === false
                 ? "bg-zinc-900 text-white border-transparent hover:bg-zinc-800 hover:text-white"
                 : "bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-800"
@@ -93,12 +103,12 @@ export default function ReviewPhase({
         />
       </div>
 
-      <div className="flex flex-col items-center gap-3 w-full max-w-md">
+      <div className="flex flex-col items-center gap-3">
         <Button
           onClick={handleSave}
-          className="w-full rounded-full px-10 py-4 text-lg font-semibold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm transition-all duration-200"
+          className="rounded-full px-10 py-4 text-lg font-semibold bg-zinc-900 text-white hover:bg-zinc-800 shadow-sm transition-all duration-200"
         >
-          Save &amp; Start Another
+          Done
         </Button>
         {error && (
           <p className="text-sm text-zinc-400 animate-in">{error}</p>

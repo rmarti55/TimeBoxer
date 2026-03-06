@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Square } from "lucide-react";
+import { Play, Pause, Square, CheckCircle } from "lucide-react";
 
 interface TimerPhaseProps {
   task: string;
@@ -13,6 +13,7 @@ interface TimerPhaseProps {
   onPause: () => void;
   onResume: () => void;
   onCancel: () => void;
+  onFinishEarly: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -24,12 +25,15 @@ function formatTime(seconds: number): string {
 export default function TimerPhase({
   task,
   secondsLeft,
+  totalSeconds,
   progress,
   isPaused,
   onPause,
   onResume,
   onCancel,
+  onFinishEarly,
 }: TimerPhaseProps) {
+  const totalMinutes = Math.round(totalSeconds / 60);
   useEffect(() => {
     const original = document.title;
     document.title = `${formatTime(secondsLeft)} — TimeBoxer`;
@@ -44,7 +48,7 @@ export default function TimerPhase({
 
   return (
     <div className="flex flex-col items-center gap-10">
-      <p className="max-w-md text-center text-lg text-zinc-400">
+      <p className="max-w-md text-center text-2xl font-semibold text-zinc-700">
         {task}
       </p>
 
@@ -76,8 +80,11 @@ export default function TimerPhase({
           <span className="text-6xl font-bold tabular-nums tracking-tight text-zinc-900">
             {formatTime(secondsLeft)}
           </span>
+          <span className="mt-1 text-sm text-zinc-400">
+            {totalMinutes} min timer
+          </span>
           {isPaused && (
-            <span className="mt-2 text-xs font-medium tracking-widest uppercase text-zinc-400">
+            <span className="mt-1 text-xs font-medium tracking-widest uppercase text-zinc-400">
               Paused
             </span>
           )}
@@ -86,22 +93,29 @@ export default function TimerPhase({
 
       <div className="flex gap-4">
         <Button
-          variant="outline"
+          variant="default"
           onClick={isPaused ? onResume : onPause}
-          className="rounded-full px-8 py-3 text-sm font-medium bg-white text-zinc-600 border-zinc-200 hover:bg-zinc-50 hover:border-zinc-300 hover:text-zinc-800 transition-all duration-200"
+          className="rounded-full px-10 py-4 text-base font-medium bg-zinc-900 text-white hover:bg-zinc-800 transition-all duration-200"
         >
           {isPaused ? (
-            <><Play className="mr-2 h-4 w-4" /> Resume</>
+            <><Play className="mr-2 h-5 w-5" /> Resume</>
           ) : (
-            <><Pause className="mr-2 h-4 w-4" /> Pause</>
+            <><Pause className="mr-2 h-5 w-5" /> Pause</>
           )}
         </Button>
         <Button
-          variant="outline"
-          onClick={onCancel}
-          className="rounded-full px-8 py-3 text-sm font-medium bg-white text-zinc-600 border-zinc-200 hover:text-red-600 hover:border-red-200 hover:bg-red-50 transition-all duration-200"
+          variant="default"
+          onClick={onFinishEarly}
+          className="rounded-full px-10 py-4 text-base font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200"
         >
-          <Square className="mr-2 h-4 w-4" /> Cancel
+          <CheckCircle className="mr-2 h-5 w-5" /> Done
+        </Button>
+        <Button
+          variant="default"
+          onClick={onCancel}
+          className="rounded-full px-10 py-4 text-base font-medium bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+        >
+          <Square className="mr-2 h-5 w-5" /> Cancel
         </Button>
       </div>
     </div>

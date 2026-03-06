@@ -9,24 +9,44 @@ import TimerPhase from "./TimerPhase";
 import ReviewPhase from "./ReviewPhase";
 import HistoryPanel from "./HistoryPanel";
 
+function playAlarmSound() {
+  try {
+    const ctx = new AudioContext();
+    const beepCount = 3;
+    const beepDuration = 0.15;
+    const gap = 0.12;
+
+    for (let i = 0; i < beepCount; i++) {
+      const startTime = ctx.currentTime + i * (beepDuration + gap);
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc.frequency.value = 880;
+      gain.gain.setValueAtTime(0.4, startTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + beepDuration);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + beepDuration);
+    }
+  } catch {}
+}
+
 export default function TimeBoxer() {
   const [phase, setPhase] = useState<Phase>("setup");
   const [task, setTask] = useState("");
   const [durationMinutes, setDurationMinutes] = useState(0);
+  const [finishedEarly, setFinishedEarly] = useState(false);
   const startedAtRef = useRef<string>("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const { sessions, addSession, clearHistory } = useSessionHistory();
 
   const handleTimerComplete = useCallback(() => {
+    setFinishedEarly(false);
     setPhase("review");
-    try {
-      if (!audioRef.current) {
-        audioRef.current = new Audio("/alarm.wav");
-      }
-      audioRef.current.currentTime = 0;
-      audioRef.current.play().catch(() => {});
-    } catch {}
+    playAlarmSound();
 
     if (typeof Notification !== "undefined" && Notification.permission === "granted") {
       new Notification("TimeBoxer", {
@@ -52,6 +72,12 @@ export default function TimeBoxer() {
   const handleCancel = () => {
     timer.cancel();
     setPhase("setup");
+  };
+
+  const handleFinishEarly = () => {
+    timer.cancel();
+    setFinishedEarly(true);
+    setPhase("review");
   };
 
   const handleReviewComplete = (accomplished: boolean, note?: string) => {
@@ -81,12 +107,14 @@ export default function TimeBoxer() {
               onPause={timer.pause}
               onResume={timer.resume}
               onCancel={handleCancel}
+              onFinishEarly={handleFinishEarly}
             />
           )}
           {phase === "review" && (
             <ReviewPhase
               task={task}
               durationMinutes={durationMinutes}
+              finishedEarly={finishedEarly}
               onComplete={handleReviewComplete}
             />
           )}
@@ -94,7 +122,7 @@ export default function TimeBoxer() {
 
         {phase === "setup" && sessions.length > 0 && (
           <div className="w-full animate-in fade-in duration-700 delay-150 fill-mode-both">
-            <HistoryPanel sessions={sessions} onClear={clearHistory} />
+            <HistoryPanel sessions={sessions} onClear={clearHistory} onRestart={handleStart} />
           </div>
         )}
       </div>
