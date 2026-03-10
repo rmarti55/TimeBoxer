@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Session } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Trash2, RotateCcw } from "lucide-react";
@@ -21,8 +21,24 @@ function formatShortDate(iso: string): string {
 
 export default function HistoryPanel({ sessions, onClear, onRestart }: HistoryPanelProps) {
   const [confirmClear, setConfirmClear] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  const checkScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScrollUp(el.scrollTop > 0);
+    setCanScrollDown(el.scrollTop + el.clientHeight < el.scrollHeight - 1);
+  }, []);
+
+  useEffect(() => { checkScroll(); }, [checkScroll, sessions]);
 
   if (sessions.length === 0) return null;
+
+  const topMask = canScrollUp ? "transparent, black 24px" : "black, black";
+  const bottomMask = canScrollDown ? "black calc(100% - 24px), transparent" : "black, black";
+  const mask = `linear-gradient(to bottom, ${topMask}, ${bottomMask})`;
 
   return (
     <div className="w-full max-w-md mx-auto mt-12">
@@ -67,11 +83,10 @@ export default function HistoryPanel({ sessions, onClear, onRestart }: HistoryPa
       </div>
 
       <div
+        ref={scrollRef}
+        onScroll={checkScroll}
         className="max-h-[320px] overflow-y-auto space-y-3 pr-1 scrollbar-thin"
-        style={{
-          maskImage: "linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent)",
-          WebkitMaskImage: "linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent)",
-        }}
+        style={{ maskImage: mask, WebkitMaskImage: mask }}
       >
         {sessions.map((s) => (
           <button
