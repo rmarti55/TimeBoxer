@@ -40,10 +40,12 @@ export default function TimeBoxer() {
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [finishedEarly, setFinishedEarly] = useState(false);
   const startedAtRef = useRef<string>("");
+  const endedAtRef = useRef<string>("");
 
   const { sessions, addSession, clearHistory } = useSessionHistory();
 
   const handleTimerComplete = useCallback(() => {
+    endedAtRef.current = new Date().toISOString();
     setFinishedEarly(false);
     setPhase("review");
     playAlarmSound();
@@ -76,6 +78,7 @@ export default function TimeBoxer() {
 
   const handleFinishEarly = () => {
     timer.cancel();
+    endedAtRef.current = new Date().toISOString();
     setFinishedEarly(true);
     setPhase("review");
   };
@@ -85,7 +88,7 @@ export default function TimeBoxer() {
       task,
       durationMinutes,
       startedAt: startedAtRef.current,
-      completedAt: new Date().toISOString(),
+      completedAt: endedAtRef.current,
       accomplished,
       note,
     });
@@ -104,6 +107,8 @@ export default function TimeBoxer() {
               totalSeconds={timer.totalSeconds}
               progress={timer.progress}
               isPaused={timer.isPaused}
+              startedAt={startedAtRef.current}
+              endsAt={new Date(new Date(startedAtRef.current).getTime() + durationMinutes * 60_000).toISOString()}
               onPause={timer.pause}
               onResume={timer.resume}
               onCancel={handleCancel}
@@ -115,6 +120,8 @@ export default function TimeBoxer() {
               task={task}
               durationMinutes={durationMinutes}
               finishedEarly={finishedEarly}
+              startedAt={startedAtRef.current}
+              endedAt={endedAtRef.current}
               onComplete={handleReviewComplete}
             />
           )}

@@ -4,11 +4,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AlarmClock, CheckCircle } from "lucide-react";
+import { formatTimeRange } from "@/lib/utils";
 
 interface ReviewPhaseProps {
   task: string;
   durationMinutes: number;
   finishedEarly?: boolean;
+  startedAt: string;
+  endedAt: string;
   onComplete: (accomplished: boolean, note?: string) => void;
 }
 
@@ -16,6 +19,8 @@ export default function ReviewPhase({
   task,
   durationMinutes,
   finishedEarly = false,
+  startedAt,
+  endedAt,
   onComplete,
 }: ReviewPhaseProps) {
   const [note, setNote] = useState("");
@@ -48,7 +53,7 @@ export default function ReviewPhase({
           {finishedEarly ? "Nice work!" : "Time\u2019s up!"}
         </h2>
         <p className="mt-2 text-sm text-zinc-400">
-          {durationMinutes} min session
+          {durationMinutes} min session · {formatTimeRange(startedAt, endedAt)}
         </p>
       </div>
 

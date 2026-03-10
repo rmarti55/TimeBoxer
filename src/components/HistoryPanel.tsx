@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Session } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, XCircle, Trash2, RotateCcw } from "lucide-react";
+import { formatTimeRange } from "@/lib/utils";
 
 interface HistoryPanelProps {
   sessions: Session[];
@@ -11,13 +12,10 @@ interface HistoryPanelProps {
   onRestart: (minutes: number, task: string) => void;
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, {
+function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   });
 }
 
@@ -28,48 +26,12 @@ export default function HistoryPanel({ sessions, onClear, onRestart }: HistoryPa
 
   return (
     <div className="w-full max-w-md mx-auto mt-12">
-      <h2 className="text-sm font-medium text-zinc-400 mb-4 px-1">
-        History ({sessions.length})
-      </h2>
-
-      <div className="max-h-[320px] overflow-y-auto space-y-3 pr-1 scrollbar-thin">
-        {sessions.map((s) => (
-          <button
-            key={s.id}
-            type="button"
-            onClick={() => onRestart(s.durationMinutes, s.task)}
-            className="w-full text-left rounded-2xl bg-white border border-zinc-100 px-5 py-4 shadow-sm cursor-pointer hover:border-zinc-300 hover:shadow-md transition-all duration-200 group"
-          >
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 font-medium text-zinc-800 text-sm">
-                  {s.task}
-                </p>
-                <p className="mt-1 text-xs text-zinc-400">
-                  {s.durationMinutes} min · {formatDate(s.completedAt)}
-                </p>
-                {s.note && (
-                  <p className="mt-2 text-sm text-zinc-500 bg-zinc-50 px-3 py-2 rounded-xl">
-                    {s.note}
-                  </p>
-                )}
-              </div>
-              <div className="flex-shrink-0 flex items-center gap-2">
-                {s.accomplished ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-zinc-300" />
-                )}
-                <RotateCcw className="h-4 w-4 text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      <div className="pt-4 text-center">
+      <div className="flex items-center justify-between mb-4 px-1">
+        <h2 className="text-sm font-medium text-zinc-400">
+          History ({sessions.length})
+        </h2>
         {confirmClear ? (
-          <div className="flex items-center justify-center gap-3 animate-in">
+          <div className="flex items-center gap-2 animate-in">
             <span className="text-sm text-zinc-400">Clear all?</span>
             <Button
               variant="ghost"
@@ -102,6 +64,47 @@ export default function HistoryPanel({ sessions, onClear, onRestart }: HistoryPa
             Clear history
           </Button>
         )}
+      </div>
+
+      <div
+        className="max-h-[320px] overflow-y-auto space-y-3 pr-1 scrollbar-thin"
+        style={{
+          maskImage: "linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent)",
+          WebkitMaskImage: "linear-gradient(to bottom, transparent, black 24px, black calc(100% - 24px), transparent)",
+        }}
+      >
+        {sessions.map((s) => (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => onRestart(s.durationMinutes, s.task)}
+            className="w-full text-left rounded-2xl bg-white border border-zinc-100 px-5 py-4 shadow-sm cursor-pointer hover:border-zinc-300 hover:shadow-md transition-all duration-200 group"
+          >
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-2 font-medium text-zinc-800 text-sm">
+                  {s.task}
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">
+                  {s.durationMinutes} min · {formatTimeRange(s.startedAt, s.completedAt)} · {formatShortDate(s.startedAt)}
+                </p>
+                {s.note && (
+                  <p className="mt-2 text-sm text-zinc-500 bg-zinc-50 px-3 py-2 rounded-xl">
+                    {s.note}
+                  </p>
+                )}
+              </div>
+              <div className="flex-shrink-0 flex items-center gap-2">
+                {s.accomplished ? (
+                  <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                ) : (
+                  <XCircle className="h-5 w-5 text-zinc-300" />
+                )}
+                <RotateCcw className="h-4 w-4 text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+              </div>
+            </div>
+          </button>
+        ))}
       </div>
     </div>
   );

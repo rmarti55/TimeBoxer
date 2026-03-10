@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, Square, CheckCircle } from "lucide-react";
+import { formatTimeRange } from "@/lib/utils";
 
 interface TimerPhaseProps {
   task: string;
@@ -10,6 +11,8 @@ interface TimerPhaseProps {
   totalSeconds: number;
   progress: number;
   isPaused: boolean;
+  startedAt: string;
+  endsAt: string;
   onPause: () => void;
   onResume: () => void;
   onCancel: () => void;
@@ -28,6 +31,8 @@ export default function TimerPhase({
   totalSeconds,
   progress,
   isPaused,
+  startedAt,
+  endsAt,
   onPause,
   onResume,
   onCancel,
@@ -82,6 +87,9 @@ export default function TimerPhase({
           </span>
           <span className="mt-1 text-sm text-zinc-400">
             {totalMinutes} min timer
+          </span>
+          <span className="mt-0.5 text-xs text-zinc-400/70">
+            {formatTimeRange(startedAt, endsAt)}
           </span>
           {isPaused && (
             <span className="mt-1 text-xs font-medium tracking-widest uppercase text-zinc-400">
