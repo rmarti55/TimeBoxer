@@ -44,8 +44,8 @@ export default function NotesPanel({ notes, onChange }: NotesPanelProps) {
   }
 
   return (
-    <div className="w-80 flex-shrink-0 animate-in slide-in-from-right-4 fade-in duration-300">
-      <div className="sticky top-8 rounded-2xl border border-zinc-100 bg-white shadow-sm overflow-hidden">
+    <div className="fixed right-6 top-1/2 -translate-y-1/2 z-10 w-80 animate-in slide-in-from-right-4 fade-in duration-300">
+      <div className="rounded-2xl border border-zinc-100 bg-white shadow-sm overflow-hidden">
         <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-100">
           <div className="flex items-center gap-2">
             <PenLine className="h-4 w-4 text-zinc-400" />

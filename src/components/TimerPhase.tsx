@@ -39,7 +39,7 @@ export default function TimerPhase({
   onFinishEarly,
   onMinimize,
 }: TimerPhaseProps) {
-  const elapsedSeconds = totalSeconds - secondsLeft;
+  const elapsedSeconds = Math.max(0, totalSeconds - secondsLeft);
 
   const radius = 130;
   const circumference = 2 * Math.PI * radius;
@@ -76,8 +76,8 @@ export default function TimerPhase({
           />
         </svg>
         <div className="absolute flex flex-col items-center">
-          <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
-            elapsed
+          <span className="text-xs font-medium tracking-widest uppercase text-zinc-400">
+            Elapsed
           </span>
           <span className="text-6xl font-bold tabular-nums tracking-tight text-zinc-900">
             {formatTime(elapsedSeconds)}

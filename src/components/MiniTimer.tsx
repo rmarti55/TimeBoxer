@@ -25,7 +25,7 @@ export default function MiniTimer({
   isPaused,
   onMaximize,
 }: MiniTimerProps) {
-  const elapsedSeconds = totalSeconds - secondsLeft;
+  const elapsedSeconds = Math.max(0, totalSeconds - secondsLeft);
   return (
     <button
       type="button"
@@ -55,7 +55,7 @@ export default function MiniTimer({
               {formatTime(elapsedSeconds)}
             </span>
             <span className="text-xs tabular-nums text-zinc-400">
-              {formatTime(secondsLeft)} left
+              {formatTime(secondsLeft)} remaining
             </span>
             <Maximize2 className="h-4 w-4 text-zinc-400" />
           </div>

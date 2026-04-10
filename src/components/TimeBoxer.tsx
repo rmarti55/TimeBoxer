@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Phase } from "@/lib/types";
 import { useTimer } from "@/lib/useTimer";
 import { useSessionHistory } from "@/lib/useSessionHistory";
 import { useSessionNotes } from "@/lib/useSessionNotes";
+import { useSupabaseAuth } from "@/lib/useSupabaseAuth";
 import SetupPhase from "./SetupPhase";
+import AuthPanel from "./AuthPanel";
 import TimerPhase from "./TimerPhase";
 import ReviewPhase from "./ReviewPhase";
 import HistoryPanel from "./HistoryPanel";
@@ -49,14 +51,19 @@ export default function TimeBoxer() {
   const [durationMinutes, setDurationMinutes] = useState(0);
   const [finishedEarly, setFinishedEarly] = useState(false);
   const [isTimerMinimized, setIsTimerMinimized] = useState(false);
-  const startedAtRef = useRef<string>("");
-  const endedAtRef = useRef<string>("");
+  const [sessionStartedAt, setSessionStartedAt] = useState("");
+  const [sessionEndedAt, setSessionEndedAt] = useState("");
 
-  const { sessions, addSession, clearHistory } = useSessionHistory();
-  const sessionNotes = useSessionNotes(startedAtRef.current);
+  const { user, loading: authLoading, signInWithMagicLink, signOut, configured } =
+    useSupabaseAuth();
+  const { sessions, addSession, clearHistory, cloudLoading, historyError } = useSessionHistory(
+    user?.id ?? null,
+    authLoading,
+  );
+  const sessionNotes = useSessionNotes(sessionStartedAt);
 
-  const handleTimerComplete = useCallback(() => {
-    endedAtRef.current = new Date().toISOString();
+  function handleTimerComplete() {
+    setSessionEndedAt(new Date().toISOString());
     sessionNotes.flush();
     setFinishedEarly(false);
     setIsTimerMinimized(false);
@@ -68,14 +75,14 @@ export default function TimeBoxer() {
         body: `Time's up! Did you finish: ${task}?`,
       });
     }
-  }, [task, sessionNotes.flush]);
+  }
 
   const timer = useTimer({ onComplete: handleTimerComplete });
 
   useEffect(() => {
     if (phase !== "running") return;
     const original = document.title;
-    const elapsed = timer.totalSeconds - timer.secondsLeft;
+    const elapsed = Math.max(0, timer.totalSeconds - timer.secondsLeft);
     document.title = `${formatTime(elapsed)} elapsed — TimeBoxer`;
     return () => {
       document.title = original;
@@ -85,7 +92,8 @@ export default function TimeBoxer() {
   const handleStart = (minutes: number, taskText: string) => {
     setTask(taskText);
     setDurationMinutes(minutes);
-    startedAtRef.current = new Date().toISOString();
+    setSessionStartedAt(new Date().toISOString());
+    setSessionEndedAt("");
     setIsTimerMinimized(false);
     setPhase("running");
     timer.start(minutes * 60);
@@ -98,6 +106,8 @@ export default function TimeBoxer() {
   const handleCancel = () => {
     timer.cancel();
     sessionNotes.clearNotes();
+    setSessionStartedAt("");
+    setSessionEndedAt("");
     setIsTimerMinimized(false);
     setPhase("setup");
   };
@@ -105,7 +115,7 @@ export default function TimeBoxer() {
   const handleFinishEarly = () => {
     timer.cancel();
     sessionNotes.flush();
-    endedAtRef.current = new Date().toISOString();
+    setSessionEndedAt(new Date().toISOString());
     setFinishedEarly(true);
     setIsTimerMinimized(false);
     setPhase("review");
@@ -116,13 +126,15 @@ export default function TimeBoxer() {
     addSession({
       task,
       durationMinutes,
-      startedAt: startedAtRef.current,
-      completedAt: endedAtRef.current,
+      startedAt: sessionStartedAt,
+      completedAt: sessionEndedAt,
       accomplished,
       note,
       notes: inSessionNotes,
     });
     sessionNotes.clearNotes();
+    setSessionStartedAt("");
+    setSessionEndedAt("");
     setPhase("setup");
   };
 
@@ -132,40 +144,65 @@ export default function TimeBoxer() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center px-6 py-16 bg-[#fafafa]">
-      <div className={`w-full flex flex-col items-center ${isFullTimer ? "max-w-5xl" : "max-w-2xl"}`}>
+      <div
+        className={`w-full flex flex-col items-center ${isFullTimer ? "max-w-5xl" : "max-w-2xl"}`}
+      >
         <div className="w-full animate-in fade-in duration-500">
-          {showSetupAndHistory && <SetupPhase onStart={handleStart} />}
+          {showSetupAndHistory && (
+            <div className="flex w-full flex-col gap-8">
+              <AuthPanel
+                user={user}
+                authLoading={authLoading}
+                configured={configured}
+                onSignIn={signInWithMagicLink}
+                onSignOut={signOut}
+              />
+              {historyError && (
+                <p className="text-center text-sm text-red-500" role="alert">
+                  {historyError}
+                </p>
+              )}
+              {user && cloudLoading && (
+                <p className="text-center text-sm text-zinc-400" aria-live="polite">
+                  Loading your history…
+                </p>
+              )}
+              <SetupPhase onStart={handleStart} />
+            </div>
+          )}
           {isFullTimer && (
-            <div className="flex items-start justify-center gap-8 w-full">
-              <div className="flex-1 flex justify-center">
-                <TimerPhase
-                  task={task}
-                  secondsLeft={timer.secondsLeft}
-                  totalSeconds={timer.totalSeconds}
-                  progress={timer.progress}
-                  isPaused={timer.isPaused}
-                  startedAt={startedAtRef.current}
-                  endsAt={new Date(new Date(startedAtRef.current).getTime() + durationMinutes * 60_000).toISOString()}
-                  onPause={timer.pause}
-                  onResume={timer.resume}
-                  onCancel={handleCancel}
-                  onFinishEarly={handleFinishEarly}
-                  onMinimize={() => setIsTimerMinimized(true)}
-                />
-              </div>
+            <>
+              <TimerPhase
+                task={task}
+                secondsLeft={timer.secondsLeft}
+                totalSeconds={timer.totalSeconds}
+                progress={timer.progress}
+                isPaused={timer.isPaused}
+                startedAt={sessionStartedAt}
+                endsAt={
+                  new Date(
+                    new Date(sessionStartedAt).getTime() + durationMinutes * 60_000,
+                  ).toISOString()
+                }
+                onPause={timer.pause}
+                onResume={timer.resume}
+                onCancel={handleCancel}
+                onFinishEarly={handleFinishEarly}
+                onMinimize={() => setIsTimerMinimized(true)}
+              />
               <NotesPanel
                 notes={sessionNotes.notes}
                 onChange={sessionNotes.updateNotes}
               />
-            </div>
+            </>
           )}
           {phase === "review" && (
             <ReviewPhase
               task={task}
               durationMinutes={durationMinutes}
               finishedEarly={finishedEarly}
-              startedAt={startedAtRef.current}
-              endedAt={endedAtRef.current}
+              startedAt={sessionStartedAt}
+              endedAt={sessionEndedAt}
               onComplete={handleReviewComplete}
             />
           )}
