@@ -8,4 +8,5 @@ export interface Session {
   completedAt: string;
   accomplished: boolean;
   note?: string;
+  notes?: string;
 }

@@ -108,6 +108,12 @@ export default function HistoryPanel({ sessions, onClear, onRestart }: HistoryPa
                     {s.note}
                   </p>
                 )}
+                {s.notes && (
+                  <div className="mt-2 bg-zinc-50 px-3 py-2 rounded-xl">
+                    <span className="text-[11px] font-medium text-zinc-400 uppercase tracking-wide">Session notes</span>
+                    <p className="mt-0.5 text-sm text-zinc-500 whitespace-pre-wrap">{s.notes}</p>
+                  </div>
+                )}
               </div>
               <div className="flex-shrink-0 flex items-center gap-2">
                 {s.accomplished ? (

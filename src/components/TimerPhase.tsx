@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, Square, CheckCircle } from "lucide-react";
+import { Play, Pause, Square, CheckCircle, Minimize2 } from "lucide-react";
 import { formatTimeRange } from "@/lib/utils";
 
 interface TimerPhaseProps {
@@ -17,6 +16,7 @@ interface TimerPhaseProps {
   onResume: () => void;
   onCancel: () => void;
   onFinishEarly: () => void;
+  onMinimize: () => void;
 }
 
 function formatTime(seconds: number): string {
@@ -37,15 +37,9 @@ export default function TimerPhase({
   onResume,
   onCancel,
   onFinishEarly,
+  onMinimize,
 }: TimerPhaseProps) {
-  const totalMinutes = Math.round(totalSeconds / 60);
-  useEffect(() => {
-    const original = document.title;
-    document.title = `${formatTime(secondsLeft)} — TimeBoxer`;
-    return () => {
-      document.title = original;
-    };
-  }, [secondsLeft]);
+  const elapsedSeconds = totalSeconds - secondsLeft;
 
   const radius = 130;
   const circumference = 2 * Math.PI * radius;
@@ -82,11 +76,14 @@ export default function TimerPhase({
           />
         </svg>
         <div className="absolute flex flex-col items-center">
-          <span className="text-6xl font-bold tabular-nums tracking-tight text-zinc-900">
-            {formatTime(secondsLeft)}
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400">
+            elapsed
           </span>
-          <span className="mt-1 text-sm text-zinc-400">
-            {totalMinutes} min timer
+          <span className="text-6xl font-bold tabular-nums tracking-tight text-zinc-900">
+            {formatTime(elapsedSeconds)}
+          </span>
+          <span className="mt-1 text-sm tabular-nums text-zinc-400">
+            {formatTime(secondsLeft)} remaining
           </span>
           <span className="mt-0.5 text-xs text-zinc-400/70">
             {formatTimeRange(startedAt, endsAt)}
@@ -99,31 +96,40 @@ export default function TimerPhase({
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col items-center gap-4">
+        <div className="flex gap-4">
+          <Button
+            variant="default"
+            onClick={isPaused ? onResume : onPause}
+            className="rounded-full px-10 py-4 text-base font-medium bg-zinc-900 text-white hover:bg-zinc-800 transition-all duration-200"
+          >
+            {isPaused ? (
+              <><Play className="mr-2 h-5 w-5" /> Resume</>
+            ) : (
+              <><Pause className="mr-2 h-5 w-5" /> Pause</>
+            )}
+          </Button>
+          <Button
+            variant="default"
+            onClick={onFinishEarly}
+            className="rounded-full px-10 py-4 text-base font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200"
+          >
+            <CheckCircle className="mr-2 h-5 w-5" /> Done
+          </Button>
+          <Button
+            variant="default"
+            onClick={onCancel}
+            className="rounded-full px-10 py-4 text-base font-medium bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
+          >
+            <Square className="mr-2 h-5 w-5" /> Cancel
+          </Button>
+        </div>
         <Button
-          variant="default"
-          onClick={isPaused ? onResume : onPause}
-          className="rounded-full px-10 py-4 text-base font-medium bg-zinc-900 text-white hover:bg-zinc-800 transition-all duration-200"
+          variant="ghost"
+          onClick={onMinimize}
+          className="rounded-full px-6 py-2 text-sm font-medium text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-all duration-200"
         >
-          {isPaused ? (
-            <><Play className="mr-2 h-5 w-5" /> Resume</>
-          ) : (
-            <><Pause className="mr-2 h-5 w-5" /> Pause</>
-          )}
-        </Button>
-        <Button
-          variant="default"
-          onClick={onFinishEarly}
-          className="rounded-full px-10 py-4 text-base font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-all duration-200"
-        >
-          <CheckCircle className="mr-2 h-5 w-5" /> Done
-        </Button>
-        <Button
-          variant="default"
-          onClick={onCancel}
-          className="rounded-full px-10 py-4 text-base font-medium bg-red-600 text-white hover:bg-red-700 transition-all duration-200"
-        >
-          <Square className="mr-2 h-5 w-5" /> Cancel
+          <Minimize2 className="mr-1.5 h-4 w-4" /> Minimize
         </Button>
       </div>
     </div>
